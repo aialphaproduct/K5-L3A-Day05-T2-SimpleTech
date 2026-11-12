@@ -84,9 +84,16 @@
 
 ## §5. Prototype (chặng 5)
 
-- **Link/file:** [`prototype/index.html`](index.html) — mở trực tiếp bằng trình duyệt, không cần cài gì. Có 2 tab chuyển màn hình.
-- **Công cụ:** HTML + CSS + JS thuần, không backend, không đăng nhập. Dữ liệu hội thoại là dựng, bấm qua được (nút "Vẫn không ra", "Học viên hỏi thẳng đáp số lần 2", 2 nhánh "Dạ bài 2" / "À bài 3 ạ").
-- **Phần nào mock:** toàn bộ — không có lời gọi AI thật (không làm bonus này).
+- **Link/file:** [`prototype/index.html`](index.html) — mở trực tiếp bằng trình duyệt, không cần cài gì. Có 3 tab chuyển màn hình.
+- **Công cụ:** HTML + CSS + JS thuần, không backend, không đăng nhập.
+- **Phần nào mock, phần nào thật:**
+  - Màn 1, Màn 2: kịch bản cố định (#6, #5), bấm qua được (nút "Vẫn không ra", "Học viên hỏi thẳng đáp số lần 2", 2 nhánh "Dạ bài 2" / "À bài 3 ạ") — minh hoạ đúng luật đã thiết kế ở §3–§4.
+  - Màn 3 — Chat tương tác thật: gõ tự do bất kỳ câu nào.
+    - **Chưa có API key:** mô phỏng cục bộ bằng từ khoá (9 nhánh khớp theo §2, có fallback khi không khớp).
+    - **Có API key (bonus — lời gọi AI thật):** gọi trực tiếp **Anthropic API** (model `claude-haiku-5-5`) từ trình duyệt, với system prompt nhúng đúng luật ở §2–§4 + toàn bộ tài liệu buổi 3 + trang khoá học làm nguồn duy nhất; model tự quyết định trả lời/hỏi lại/từ chối và tự gắn nhãn `lớp_rủi_ro`, `tool_gọi`, `mức_tự_chủ`, `nguyên_tắc` ở cuối mỗi câu trả lời.
+    - **API key chỉ lưu trong `localStorage` của trình duyệt, nhập lúc chạy, không commit vào repo** (đúng luật "Không commit API key; key để biến môi trường" — ở một trang tĩnh không có server, tương đương là không bao giờ ghi key vào file).
+    - Nếu gọi API lỗi (sai key, mất mạng...) → hiện thông báo lỗi rõ ràng, không treo im lặng (minh hoạ *graceful failure* — PAIR).
+  - "▾ Chi tiết kỹ thuật": bấm bung ra dưới mỗi câu trả lời (cả 3 màn) để xem tool được gọi, lớp rủi ro, mức tự chủ, nguyên tắc HAX/PAIR áp dụng — không cần đọc code mới hiểu quyết định. Công tắc "Chế độ kỹ thuật" ở đầu trang bung tất cả cùng lúc cho người xem kỹ thuật, mặc định đóng cho người xem thường.
 
 **Màn 1 — Xin làm hộ bài đang mở (kịch bản #6):**
 1. **G10 — thu hẹp phạm vi:** tool `goi_y_bai_tap` chỉ gợi ý §3.4, không đưa đáp số — thẻ "Đang mở · không đưa đáp số" ở góc phải trên.
