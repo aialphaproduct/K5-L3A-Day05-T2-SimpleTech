@@ -84,16 +84,16 @@
 
 ## §5. Prototype (chặng 5)
 
-- **Link/file:** [`prototype/index.html`](index.html) — mở trực tiếp bằng trình duyệt, không cần cài gì. Có 3 tab chuyển màn hình.
-- **Công cụ:** HTML + CSS + JS thuần, không backend, không đăng nhập.
-- **Phần nào mock, phần nào thật:**
-  - Màn 1, Màn 2: kịch bản cố định (#6, #5), bấm qua được (nút "Vẫn không ra", "Học viên hỏi thẳng đáp số lần 2", 2 nhánh "Dạ bài 2" / "À bài 3 ạ") — minh hoạ đúng luật đã thiết kế ở §3–§4.
-  - Màn 3 — Chat tương tác thật: gõ tự do bất kỳ câu nào.
-    - **Chưa có API key:** mô phỏng cục bộ bằng từ khoá (9 nhánh khớp theo §2, có fallback khi không khớp).
-    - **Có API key (bonus — lời gọi AI thật):** gọi trực tiếp **Anthropic API** (model `claude-haiku-5-5`) từ trình duyệt, với system prompt nhúng đúng luật ở §2–§4 + toàn bộ tài liệu buổi 3 + trang khoá học làm nguồn duy nhất; model tự quyết định trả lời/hỏi lại/từ chối và tự gắn nhãn `lớp_rủi_ro`, `tool_gọi`, `mức_tự_chủ`, `nguyên_tắc` ở cuối mỗi câu trả lời.
-    - **API key chỉ lưu trong `localStorage` của trình duyệt, nhập lúc chạy, không commit vào repo** (đúng luật "Không commit API key; key để biến môi trường" — ở một trang tĩnh không có server, tương đương là không bao giờ ghi key vào file).
-    - Nếu gọi API lỗi (sai key, mất mạng...) → hiện thông báo lỗi rõ ràng, không treo im lặng (minh hoạ *graceful failure* — PAIR).
-  - "▾ Chi tiết kỹ thuật": bấm bung ra dưới mỗi câu trả lời (cả 3 màn) để xem tool được gọi, lớp rủi ro, mức tự chủ, nguyên tắc HAX/PAIR áp dụng — không cần đọc code mới hiểu quyết định. Công tắc "Chế độ kỹ thuật" ở đầu trang bung tất cả cùng lúc cho người xem kỹ thuật, mặc định đóng cho người xem thường.
+- **Link/file:** [`prototype/index.html`](prototype/index.html) — mở trực tiếp bằng trình duyệt để xem Màn 1–2–3 (chế độ mô phỏng), hoặc chạy qua server (`node server.js`, xem bên dưới) để bật AI thật.
+- **Công cụ:** HTML + CSS + JS thuần cho giao diện; [`server.js`](server.js) là server Node tối giản (chỉ dùng module có sẵn, không cài package ngoài) đóng vai trò backend proxy.
+- **Kiến trúc bảo vệ API key (bonus — lời gọi AI thật):**
+  - `ANTHROPIC_API_KEY` nằm trong file `.env` ở **phía server** (copy từ `.env.example`), **không bao giờ gửi cho trình duyệt** và **không commit lên repo** (`.env` đã trong `.gitignore`) — đúng luật "Không commit API key; key để biến môi trường".
+  - Trình duyệt gọi `/api/chat` trên server của chính mình; server mới là bên gọi Anthropic API (model `claude-haiku-5-5`) với system prompt nhúng đúng luật §2–§4 + toàn bộ tài liệu buổi 3 + trang khoá học làm nguồn duy nhất.
+  - **Hệ thống bảo vệ ở server:** giới hạn 10 câu/phút mỗi IP (chống spam), giới hạn câu hỏi 500 ký tự và body request 4KB (chống lạm dụng), trả lỗi rõ ràng khi thiếu key hoặc gọi API thất bại thay vì treo im lặng (minh hoạ *graceful failure* — PAIR).
+  - Model tự gắn nhãn `lớp_rủi_ro`, `tool_gọi`, `mức_tự_chủ`, `nguyên_tắc` ở cuối mỗi câu trả lời (yêu cầu trong system prompt), hiển thị qua panel kỹ thuật.
+  - **Mở file trực tiếp (không chạy server) hoặc chưa điền `.env`** → Màn 3 tự chuyển về mô phỏng cục bộ bằng từ khoá (9 nhánh khớp theo §2, có fallback khi không khớp) — không bao giờ crash hay trắng màn hình.
+- **Cách chạy để test AI thật:** `cp .env.example .env` → điền `ANTHROPIC_API_KEY` thật vào `.env` → `node server.js` → mở `http://localhost:8787`.
+- "▾ Chi tiết kỹ thuật": bấm bung ra dưới mỗi câu trả lời (cả 3 màn) để xem tool được gọi, lớp rủi ro, mức tự chủ, nguyên tắc HAX/PAIR áp dụng — không cần đọc code mới hiểu quyết định. Công tắc "Chế độ kỹ thuật" ở đầu trang bung tất cả cùng lúc cho người xem kỹ thuật, mặc định đóng cho người xem thường.
 
 **Màn 1 — Xin làm hộ bài đang mở (kịch bản #6):**
 1. **G10 — thu hẹp phạm vi:** tool `goi_y_bai_tap` chỉ gợi ý §3.4, không đưa đáp số — thẻ "Đang mở · không đưa đáp số" ở góc phải trên.
