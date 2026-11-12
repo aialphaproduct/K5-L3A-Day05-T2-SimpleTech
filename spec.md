@@ -4,9 +4,9 @@
 
 | Họ và Tên | Mã Học Viên | Việc đã làm |
 |---|---|---|
-| Dương |  | Kịch bản & Demo |
-| Dũng |  | UX khi AI sai |
-| Mỹ (trưởng nhóm) |  | Mức tự chủ & Prototype |
+| Khổng Tiến Dương | 2A202603467 | Kịch bản & Demo |
+| Vũ Trí Dũng | 2A202603478 | UX khi AI sai |
+| Lưu Thanh Mỹ (trưởng nhóm) | 2A202603532 | Mức tự chủ & Prototype |
 
 ## §1. Lát cắt & phạm vi
 
