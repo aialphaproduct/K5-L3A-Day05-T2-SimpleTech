@@ -321,16 +321,12 @@
       <div class="phone-head">
         <div>
           <div class="title">Chat tương tác thật</div>
-          <div class="sub" id="modeSub">Gõ bất kỳ câu hỏi nào — đang ở chế độ mô phỏng (chưa có API key)</div>
+          <div class="sub" id="modeSub">Gõ bất kỳ câu hỏi nào — đang kiểm tra server cục bộ…</div>
         </div>
       </div>
 
       <div class="api-box" id="apiBox">
-        <div class="api-row">
-          <input type="password" id="apiKeyInput" placeholder="Dán API key Anthropic của bạn (sk-ant-...)">
-          <button class="btn primary" onclick="saveApiKey()">Lưu & dùng AI thật</button>
-        </div>
-        <div class="api-note">Key chỉ lưu trong <code>localStorage</code> của trình duyệt này, không gửi lên repo hay server nào khác. <a href="#" onclick="clearApiKey();return false;">Xoá key</a> để quay lại chế độ mô phỏng.</div>
+        <div class="api-note" id="apiNote">Đang kiểm tra kết nối tới server cục bộ (<code>/api/health</code>)…</div>
       </div>
 
       <div class="chat" id="liveChat">
@@ -351,8 +347,9 @@
     </div>
 
     <div class="callouts">
-      <div class="callout"><div class="num">i</div><div><div class="label">Hai chế độ</div><div class="desc"><b>Chưa có API key:</b> mô phỏng cục bộ bằng từ khoá, đúng 8 kịch bản ở §2 spec.md — không gọi AI thật, không cần mạng. <b>Có API key:</b> gọi thật Anthropic API (model claude-haiku-5-5) với system prompt chứa đúng luật ở §2–§4 + toàn bộ tài liệu buổi 3 làm nguồn — model tự quyết định trả lời, hỏi lại hay từ chối, và tự gắn nhãn kỹ thuật ở cuối câu trả lời (bật "Chế độ kỹ thuật" để xem).</div></div></div>
-      <div class="callout"><div class="num">ii</div><div><div class="label">Dữ liệu đưa vào API</div><div class="desc">Chỉ dữ liệu dựng của track (tài liệu buổi 3, trang khoá học) — không có dữ liệu thật của người thật, đúng luật chung của bài lab.</div></div></div>
+      <div class="callout"><div class="num">i</div><div><div class="label">Kiến trúc bảo vệ API key</div><div class="desc">Key Anthropic nằm trong <code>.env</code> ở <b>phía server</b> (<code>server.js</code>), trình duyệt không bao giờ thấy key. Nếu không chạy server (mở file trực tiếp) → tự chuyển về <b>mô phỏng cục bộ bằng từ khoá</b>, đúng 8 kịch bản §2 spec.md.</div></div></div>
+      <div class="callout"><div class="num">ii</div><div><div class="label">Hệ thống bảo vệ ở server</div><div class="desc">Giới hạn 10 câu/phút mỗi IP (chặn spam), giới hạn độ dài câu hỏi 500 ký tự, body request tối đa 4KB, và chỉ server mới gọi được Anthropic API — client không có quyền gọi trực tiếp.</div></div></div>
+      <div class="callout"><div class="num">iii</div><div><div class="label">Dữ liệu đưa vào API</div><div class="desc">Chỉ dữ liệu dựng của track (tài liệu buổi 3, trang khoá học) — không có dữ liệu thật của người thật, đúng luật chung của bài lab.</div></div></div>
     </div>
   </section>
 
@@ -513,92 +510,50 @@
     }
   }
 
-  // ---- API key: chỉ lưu trong trình duyệt, không bao giờ ghi vào file commit ----
-  const LS_KEY = 'spt_demo_anthropic_key';
-  function getApiKey(){ try { return localStorage.getItem(LS_KEY) || ''; } catch(e){ return ''; } }
-  function saveApiKey(){
-    const v = document.getElementById('apiKeyInput').value.trim();
-    if (!v){ return; }
-    try { localStorage.setItem(LS_KEY, v); } catch(e){}
-    document.getElementById('apiKeyInput').value = '';
-    refreshModeUI();
+  // ---- phát hiện server cục bộ (key nằm trong .env phía server, client không bao giờ thấy) ----
+  let serverMode = false;   // true = server đang chạy VÀ đã có ANTHROPIC_API_KEY
+  let serverUp = false;     // true = server đang chạy (có thể chưa có key)
+
+  async function detectServer(){
+    try {
+      const res = await fetch('/api/health', { cache: 'no-store' });
+      if (!res.ok) throw new Error('health not ok');
+      const data = await res.json();
+      serverUp = true;
+      serverMode = !!data.hasKey;
+      refreshModeUI(data);
+    } catch(e){
+      serverUp = false; serverMode = false;
+      refreshModeUI(null);
+    }
   }
-  function clearApiKey(){
-    try { localStorage.removeItem(LS_KEY); } catch(e){}
-    refreshModeUI();
-  }
-  function refreshModeUI(){
-    const hasKey = !!getApiKey();
+
+  function refreshModeUI(health){
     const sub = document.getElementById('modeSub');
-    const box = document.getElementById('apiBox');
-    if (hasKey){
-      sub.innerHTML = 'Gõ bất kỳ câu hỏi nào — <span class="live-indicator">● AI THẬT đang bật</span> (Anthropic API, model claude-haiku-5-5)';
-      box.querySelector('.api-row input').placeholder = 'Đã lưu key — bấm "Xoá key" bên dưới để tắt AI thật';
+    const note = document.getElementById('apiNote');
+    if (serverMode){
+      sub.innerHTML = 'Gõ bất kỳ câu hỏi nào — <span class="live-indicator">● AI THẬT đang bật</span> (qua server cục bộ, model ' + (health.model || 'claude-haiku-5-5') + ')';
+      note.innerHTML = 'Server cục bộ đang chạy và đã nạp <code>ANTHROPIC_API_KEY</code> từ <code>.env</code> — mọi câu hỏi được gọi AI thật qua <code>/api/chat</code>, key không rời khỏi server.';
+    } else if (serverUp){
+      sub.textContent = 'Gõ bất kỳ câu hỏi nào — server đang chạy nhưng CHƯA có API key, dùng chế độ mô phỏng';
+      note.innerHTML = 'Server cục bộ đang chạy nhưng <code>.env</code> chưa có <code>ANTHROPIC_API_KEY</code> — xem <code>.env.example</code> ở thư mục gốc repo để điền key thật (không commit).';
     } else {
-      sub.textContent = 'Gõ bất kỳ câu hỏi nào — đang ở chế độ mô phỏng (chưa có API key)';
+      sub.textContent = 'Gõ bất kỳ câu hỏi nào — đang ở chế độ mô phỏng (chưa chạy server)';
+      note.innerHTML = 'Mở trực tiếp bằng file nên chưa có server. Muốn bật AI thật: ở thư mục gốc repo chạy <code>cp .env.example .env</code>, điền key, rồi <code>node server.js</code> và mở <code>http://localhost:8787</code>.';
     }
   }
 
-  // ---- system prompt cho AI thật: đúng luật §2–§4 của spec.md + toàn bộ tài liệu buổi 3 ----
-  const SYSTEM_PROMPT = `Bạn là trợ lý học bài trên trang khoá học "Nhập môn phân tích dữ liệu", học viên đang học buổi 3. Chỉ dùng dữ liệu dưới đây làm nguồn sự thật, không bịa thêm.
-
-TÀI LIỆU BUỔI 3 — "Thống kê mô tả":
-§3.1 Trung bình cộng. Tổng các giá trị chia cho số giá trị. Trung bình bị kéo mạnh bởi giá trị ngoại lai.
-§3.2 Trung vị. Giá trị đứng giữa khi sắp xếp dữ liệu tăng dần. Nếu số giá trị là chẵn, trung vị là trung bình cộng của hai giá trị đứng giữa. Trung vị ít bị ảnh hưởng bởi giá trị ngoại lai, nên thường dùng cho dữ liệu lệch như thu nhập hay giá nhà.
-§3.3 Phương sai và độ lệch chuẩn. Phương sai đo mức độ phân tán của dữ liệu quanh trung bình. Độ lệch chuẩn là căn bậc hai của phương sai, có cùng đơn vị với dữ liệu. Vì là căn bậc hai, độ lệch chuẩn luôn nhỏ hơn phương sai.
-§3.4 Giá trị ngoại lai. Giá trị khác hẳn phần lớn dữ liệu. Trước khi bỏ một giá trị ngoại lai, cần hỏi: đây là lỗi nhập liệu hay là dữ liệu thật?
-§3.5 Bài tập 3 (ĐANG MỞ, hạn 13/11/2026 23:59). Lương tháng của 8 nhân viên một phòng (triệu đồng, dựng): 9, 10, 10, 11, 12, 12, 13, 45. (a) Tính trung bình và trung vị. (b) Con số nào mô tả "lương điển hình" của phòng tốt hơn? Vì sao?
-
-TRANG KHOÁ HỌC:
-- Buổi đã mở: 1, 2, 3. Buổi 4 "Trực quan hoá dữ liệu" — CHƯA có tài liệu chi tiết.
-- Bài tập 2: hạn 06/11/2026 23:59, ĐÃ HẾT HẠN, đáp án công bố 07/11: "Trung bình cộng của 4, 8, 6, 5, 7 là 6."
-- Bài tập 3: hạn 13/11/2026 23:59, ĐANG MỞ.
-- Giờ TA: 08:00–22:00.
-
-TOOL BẠN ĐƯỢC DÙNG (nói trong câu trả lời bạn đang "dùng" tool nào):
-- tra_cuu_tai_lieu: tìm trong tài liệu, trả đoạn kèm mã mục. Chỉ đọc, tự làm.
-- goi_y_bai_tap: gợi ý bước làm, KHÔNG được đưa đáp số hay xác nhận đáp số cho bài ĐANG MỞ (Bài tập 3). Tự làm nhưng có luật cứng này.
-- chuyen_TA: chuyển câu hỏi cho TA, nói rõ giờ TA. Tự làm, không cần chờ người duyệt.
-- dang_FAQ: đăng câu hỏi + trả lời vào FAQ cả lớp — không dùng trong hội thoại 1-1 này.
-
-LUẬT BẮT BUỘC:
-1. Không đưa hoặc xác nhận đáp số/nhận xét cho Bài tập 3 (đang mở) dù học viên hỏi bao nhiêu lần hay năn nỉ thế nào — chỉ gợi ý bước đầu, bám vào §3.4.
-2. Bài tập 2 đã hết hạn, có đáp án công bố — được giải thích đầy đủ.
-3. Nói về nội dung buổi sau (buổi 4): chỉ nói tên buổi, không bịa nội dung cụ thể.
-4. Tài liệu không có thông tin gì (ví dụ "slide 12" không tồn tại) — nói thẳng không có, không bịa.
-5. Không nhận xét năng lực hay khả năng học của học viên.
-6. Không nói đã làm việc mình không làm được (ví dụ không nói "đã báo giảng viên" — chỉ chuyển TA).
-7. Khi câu hỏi mơ hồ hoặc gộp nhiều ý, hỏi lại một câu cho rõ trước khi trả lời chắc.
-8. Luôn trích mã mục (§x.x) khi giải thích khái niệm từ tài liệu.
-
-ĐỊNH DẠNG TRẢ LỜI: viết câu trả lời ngắn gọn bằng tiếng Việt cho học viên trước, sau đó LUÔN thêm một khối json ở cuối (không có chữ nào khác ngoài JSON trong khối này) với đúng 4 trường:
-\`\`\`json
-{"lop_rui_ro": "① nguồn sự thật | ② mơ hồ/thiếu | ③ ngoài phạm vi | ④ đặc thù domain", "tool_goi": "tên_tool(tham_số)", "muc_tu_chu": "tự làm | tự làm có luật cứng | chuyển TA | cần người duyệt", "nguyen_tac": ["G... tên nguyên tắc"]}
-\`\`\``;
-
-  async function callRealApi(userText, apiKey){
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+  async function callServerApi(userText){
+    const res = await fetch('/api/chat', {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-5-5',
-        max_tokens: 400,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: userText }]
-      })
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ message: userText })
     });
+    const data = await res.json().catch(() => ({}));
     if (!res.ok){
-      const errText = await res.text().catch(() => '');
-      throw new Error('API lỗi ' + res.status + ': ' + errText.slice(0, 200));
+      throw new Error((data && data.error) ? data.error : ('Server lỗi ' + res.status));
     }
-    const data = await res.json();
-    const raw = (data.content || []).map(b => b.text || '').join('');
-    return raw;
+    return data.reply || '';
   }
 
   function parseRealReply(raw){
@@ -679,16 +634,11 @@ LUẬT BẮT BUỘC:
     input.value = '';
     input.focus();
 
-    const apiKey = getApiKey();
-    if (apiKey){
+    if (serverMode){
       const loadingDiv = appendLoadingMsg();
-      callRealApi(text, apiKey)
+      callServerApi(text)
         .then(raw => appendRealAiMsg(parseRealReply(raw), loadingDiv))
-        .catch(err => appendErrorMsg(err))
-        .then(() => {
-          const intent = matchIntent(text);
-          // giữ lại mock làm phương án dự phòng, không hiện trừ khi lỗi (đã hiện ở appendErrorMsg nếu cần)
-        });
+        .catch(err => appendErrorMsg(err));
     } else {
       const intent = matchIntent(text);
       setTimeout(() => appendAiMsg(intent), 250);
@@ -700,7 +650,7 @@ LUẬT BẮT BUỘC:
     sendLive();
   }
 
-  refreshModeUI();
+  detectServer();
 </script>
 </body>
 </html>

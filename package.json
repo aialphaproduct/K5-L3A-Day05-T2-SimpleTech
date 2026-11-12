@@ -1,0 +1,9 @@
+{
+  "name": "k5-l3a-day05-t2-simpletech-prototype",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Server cục bộ cho prototype T2 Giáo dục - Nhóm Simple Tech",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
