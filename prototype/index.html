@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trợ lý học bài — T2 Giáo dục · Simple Tech</title>
+<style>
+  :root{
+    --bg:#f6f7fb; --card:#ffffff; --ink:#1c2230; --quiet:#6b7280;
+    --line:#e3e6ee; --accent:#4f6df5; --accent-soft:#eef1ff;
+    --good:#1f9254; --good-soft:#e7f6ee;
+    --warn:#b4790a; --warn-soft:#fdf1df;
+    --block:#b0362e; --block-soft:#fdeceb;
+    --ai-bubble:#eef1ff; --user-bubble:#eef2f5;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--ink); padding:24px 16px 60px;
+  }
+  .wrap{max-width:720px; margin:0 auto;}
+  header.page{margin-bottom:16px;}
+  header.page h1{font-size:20px; margin:0 0 4px;}
+  header.page p{margin:0; color:var(--quiet); font-size:13px;}
+
+  .tabs{display:flex; gap:8px; margin:20px 0 16px;}
+  .tab-btn{
+    flex:1; padding:10px 12px; border-radius:10px; border:1px solid var(--line);
+    background:var(--card); font-size:13px; font-weight:600; color:var(--quiet);
+    cursor:pointer; text-align:center;
+  }
+  .tab-btn.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+
+  .screen{display:none;}
+  .screen.active{display:block;}
+
+  .phone{
+    background:var(--card); border:1px solid var(--line); border-radius:18px;
+    box-shadow:0 10px 30px rgba(20,25,40,.06); overflow:hidden;
+  }
+  .phone-head{
+    padding:14px 16px; border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .phone-head .title{font-size:14px; font-weight:700;}
+  .phone-head .sub{font-size:11.5px; color:var(--quiet);}
+  .badge{
+    font-size:11px; font-weight:700; padding:4px 9px; border-radius:999px; white-space:nowrap;
+  }
+  .badge.open{background:var(--warn-soft); color:var(--warn);}
+  .badge.closed{background:var(--good-soft); color:var(--good);}
+
+  .chat{padding:16px; display:flex; flex-direction:column; gap:12px;}
+  .msg{max-width:88%; padding:10px 13px; border-radius:14px; font-size:14px; line-height:1.45; position:relative;}
+  .msg.user{align-self:flex-end; background:var(--user-bubble); border-bottom-right-radius:4px;}
+  .msg.ai{align-self:flex-start; background:var(--ai-bubble); border-bottom-left-radius:4px;}
+
+  .tag-row{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px;}
+  .tag{font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:999px;}
+  .tag.limit{background:var(--warn-soft); color:var(--warn);}
+  .tag.cite{background:var(--accent-soft); color:var(--accent);}
+  .tag.auto{background:var(--good-soft); color:var(--good);}
+  .tag.gate{background:var(--block-soft); color:var(--block);}
+
+  .cite-box{
+    margin-top:8px; padding:8px 10px; border-left:3px solid var(--accent);
+    background:#fff; border-radius:6px; font-size:12.5px; color:var(--quiet);
+  }
+  .cite-box b{color:var(--ink);}
+
+  .actions{display:flex; gap:8px; margin-top:4px; flex-wrap:wrap;}
+  .btn{
+    font-size:12.5px; font-weight:600; padding:7px 12px; border-radius:999px;
+    border:1px solid var(--line); background:#fff; cursor:pointer; color:var(--ink);
+  }
+  .btn.primary{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .btn.ghost{color:var(--accent); border-color:var(--accent-soft); background:var(--accent-soft);}
+
+  .note{
+    display:flex; gap:10px; align-items:flex-start; margin-top:14px;
+    padding:10px 12px; background:#fffaf0; border:1px solid #f3e3c3; border-radius:10px;
+    font-size:12.5px; color:#7a5b16;
+  }
+  .note b{color:#5a4210;}
+
+  .callouts{margin-top:18px; display:flex; flex-direction:column; gap:10px;}
+  .callout{
+    display:flex; gap:10px; align-items:flex-start; background:var(--card);
+    border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:12.5px;
+  }
+  .num{
+    flex:0 0 auto; width:22px; height:22px; border-radius:50%; background:var(--accent);
+    color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center;
+  }
+  .callout .label{font-weight:700; margin-bottom:2px;}
+  .callout .desc{color:var(--quiet);}
+
+  .ta-screen .card{
+    background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:10px;
+  }
+  .ta-screen .card h3{margin:0 0 6px; font-size:14px;}
+  .ta-screen .card p{margin:0 0 4px; font-size:12.5px; color:var(--quiet);}
+  .ta-screen .meta{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;}
+
+  footer.page{margin-top:28px; font-size:11.5px; color:var(--quiet); text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page">
+    <h1>Trợ lý học bài — khoá "Nhập môn phân tích dữ liệu"</h1>
+    <p>Track T2 Giáo dục · Nhóm Simple Tech · Prototype 2 màn hình, dữ liệu dựng</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-screen="s1">Màn 1 · Xin làm hộ bài đang mở</button>
+    <button class="tab-btn" data-screen="s2">Màn 2 · Hỏi chéo bài 2 / bài 3</button>
+  </div>
+
+  <!-- SCREEN 1: scenario #6 -->
+  <section class="screen active" id="s1">
+    <div class="phone">
+      <div class="phone-head">
+        <div>
+          <div class="title">Buổi 3 · Thống kê mô tả</div>
+          <div class="sub">Bài tập 3 · hạn 13/11/2026 23:59</div>
+        </div>
+        <span class="badge open">Đang mở · không đưa đáp số</span>
+      </div>
+      <div class="chat">
+        <div class="msg user">Bài tập 3 phần (b) chọn trung bình hay trung vị ạ, làm hộ em luôn được không?</div>
+
+        <div class="msg ai">
+          <div class="tag-row">
+            <span class="tag limit">① G10 · thu hẹp phạm vi</span>
+            <span class="tag cite">② G11 · trích dẫn §3.4</span>
+          </div>
+          Mình không đưa đáp số bài đang mở được. Gợi ý: xem lại <b>§3.4 Giá trị ngoại lai</b> — trong 8 số lương (9, 10, 10, 11, 12, 12, 13, 45) có số nào bất thường không?
+          <div class="cite-box"><b>Nguồn:</b> Tài liệu buổi 3 · §3.4 — "Giá trị khác hẳn phần lớn dữ liệu. Trước khi bỏ, cần hỏi: lỗi nhập liệu hay dữ liệu thật?"</div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" onclick="revealStep1()">Vẫn không ra ③</button>
+          <button class="btn ghost">Đã hiểu, em tự làm tiếp</button>
+        </div>
+
+        <div class="msg ai" id="step1" style="display:none;">
+          <div class="tag-row"><span class="tag limit">③ G9 · sửa dễ dàng, không cần gõ lại</span></div>
+          Gợi ý bước 2: giá trị 45 lệch rất xa so với các số còn lại (9–13) → đó là ngoại lai. Khi có ngoại lai, số nào trong hai số (trung bình, trung vị) ít bị ảnh hưởng hơn?
+        </div>
+
+        <div class="msg user" id="userInsist" style="display:none;">Thôi khó quá, chị/anh nói luôn đáp số đi</div>
+
+        <div class="msg ai" id="step2" style="display:none;">
+          <div class="tag-row">
+            <span class="tag gate">④ Cấm — chuyển TA</span>
+          </div>
+          Mình vẫn không đưa đáp số cho bài đang mở được. Mình đã <b>chuyển câu hỏi này cho TA</b>, TA sẽ trả lời trong giờ TA (08:00–22:00). Bạn sẽ thấy phản hồi ngay tại đây khi TA trả lời.
+          <div class="actions" style="margin-top:8px;">
+            <button class="btn ghost" disabled>Đã chuyển TA · chờ phản hồi</button>
+          </div>
+        </div>
+
+        <button class="btn" style="margin-top:6px;" onclick="revealStep2()" id="insistBtn">(Demo) Học viên hỏi thẳng đáp số lần 2</button>
+      </div>
+    </div>
+
+    <div class="callouts">
+      <div class="callout"><div class="num">1</div><div><div class="label">G10 — Thu hẹp phạm vi khi nghi ngờ</div><div class="desc">Tool <code>goi_y_bai_tap</code> ở mức <b>tự làm có luật cứng</b>: không đưa đáp số, chỉ gợi ý bước đầu bám §3.4.</div></div></div>
+      <div class="callout"><div class="num">2</div><div><div class="label">G11 — Giải thích vì sao + nguồn</div><div class="desc">Thẻ "Đang mở · không đưa đáp số" và trích dẫn mục tài liệu cho thấy căn cứ, không phải AI "né" vô lý.</div></div></div>
+      <div class="callout"><div class="num">3</div><div><div class="label">G8/G9 — Gạt bỏ / sửa dễ dàng</div><div class="desc">Nút "Vẫn không ra" đưa học viên sang gợi ý tiếp theo mà không cần gõ lại câu hỏi.</div></div></div>
+      <div class="callout"><div class="num">4</div><div><div class="label">Mức tự chủ: cấm, chuyển TA</div><div class="desc">Hỏi đáp số lần 2 → tool <code>chuyen_TA</code> tự làm (đảo được), không chờ người duyệt nhưng cũng không tự trả đáp số.</div></div></div>
+    </div>
+  </section>
+
+  <!-- SCREEN 2: scenario #5 -->
+  <section class="screen" id="s2">
+    <div class="phone">
+      <div class="phone-head">
+        <div>
+          <div class="title">Buổi 3 · Thống kê mô tả</div>
+          <div class="sub">Bài tập 2 (hết hạn) · Bài tập 3 (đang mở)</div>
+        </div>
+        <span class="badge closed">Bài 2: đã hết hạn</span>
+      </div>
+      <div class="chat">
+        <div class="msg user">Bài tập 2 đáp số đúng là 6 không ạ?</div>
+
+        <div class="msg ai">
+          <div class="tag-row">
+            <span class="tag auto">① G10 · hỏi lại cho rõ</span>
+          </div>
+          Bài tập 2 đã hết hạn, đáp án công bố 07/11 là <b>6</b> — đúng rồi.
+          <div class="cite-box"><b>Nguồn:</b> Trang khoá học — Bài tập 2 "Trung bình cộng của 4, 8, 6, 5, 7 là 6", công bố 07/11/2026.</div>
+          Bạn đang hỏi về <b>Bài tập 2</b> hay đang nhắc tới <b>Bài tập 3</b> (đang mở, hạn 13/11)? Bài 3 thì mình không xác nhận đáp số được.
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" onclick="revealBranch('b2')">Học viên: "Dạ bài 2"</button>
+          <button class="btn ghost" onclick="revealBranch('b3')">Học viên: "À bài 3 ạ"</button>
+        </div>
+
+        <div class="msg ai" id="branch-b2" style="display:none;">
+          <div class="tag-row"><span class="tag closed-tag" style="background:var(--good-soft);color:var(--good);">② Bài đã hết hạn — giải thích đầy đủ</span></div>
+          Vậy đáp số 6 là đúng. Cách tính: (4+8+6+5+7) / 5 = 30 / 5 = 6.
+        </div>
+
+        <div class="msg ai" id="branch-b3" style="display:none;">
+          <div class="tag-row"><span class="tag limit">③ G10 — chuyển nhánh, không đưa đáp số bài 3</span></div>
+          Bài 3 đang mở nên mình không xác nhận đáp số được. Gợi ý: xem lại §3.4 về giá trị ngoại lai trong dãy lương 8 người.
+        </div>
+      </div>
+    </div>
+
+    <div class="callouts">
+      <div class="callout"><div class="num">1</div><div><div class="label">G10 — Thu hẹp phạm vi khi nghi ngờ</div><div class="desc">Lỗi <b>ngữ cảnh</b>: AI trả lời đúng bài 2 nhưng không biết học viên có đang hỏi chéo bài 3 — nên hỏi lại một câu trước khi khoá chắc câu trả lời.</div></div></div>
+      <div class="callout"><div class="num">2</div><div><div class="label">Bài đã hết hạn, có đáp án</div><div class="desc">Rubric track T2: bài đã hết hạn được giải thích đầy đủ, kèm nguồn trang khoá học.</div></div></div>
+      <div class="callout"><div class="num">3</div><div><div class="label">Bài đang mở — không đổi mức dù đã "trả lời rồi"</div><div class="desc">Thiết kế chặn lỗi ngữ cảnh: dù câu hỏi ban đầu trông giống bài 2, hễ xác nhận là bài 3 thì lập tức áp mức "không đưa đáp số".</div></div></div>
+    </div>
+  </section>
+
+  <footer class="page">Prototype dữ liệu dựng · không gọi AI thật · Nhóm Simple Tech — K5 L3A Day05</footer>
+</div>
+
+<script>
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.screen).classList.add('active');
+    });
+  });
+
+  function revealStep1(){
+    document.getElementById('step1').style.display = 'block';
+  }
+  function revealStep2(){
+    document.getElementById('userInsist').style.display = 'block';
+    document.getElementById('step2').style.display = 'block';
+    document.getElementById('insistBtn').style.display = 'none';
+  }
+  function revealBranch(which){
+    document.getElementById('branch-b2').style.display = which === 'b2' ? 'block' : 'none';
+    document.getElementById('branch-b3').style.display = which === 'b3' ? 'block' : 'none';
+  }
+</script>
+</body>
+</html>

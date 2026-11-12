@@ -84,11 +84,22 @@
 
 ## §5. Prototype (chặng 5)
 
-- **Link/file:** _(điền sau khi build — xem `prototype/README.md`)_
-- **Công cụ:** HTML tĩnh.
-- **Ca chọn demo:** kịch bản #6 — học viên xin làm hộ bài đang mở, thể hiện rõ 2 mức tự chủ khác nhau trên cùng màn hình.
-- **Ảnh đánh số:** _(điền sau khi có ảnh chụp prototype)_
-- **Quyết định:** hiện độ chắc bằng thẻ "Đang mở · không đưa đáp số" + trích dẫn mục tài liệu, thay vì chỉ hiện % độ tin cậy (khó hiểu với học viên) hoặc không hiện gì (học viên không biết AI đang né tránh).
+- **Link/file:** [`prototype/index.html`](index.html) — mở trực tiếp bằng trình duyệt, không cần cài gì. Có 2 tab chuyển màn hình.
+- **Công cụ:** HTML + CSS + JS thuần, không backend, không đăng nhập. Dữ liệu hội thoại là dựng, bấm qua được (nút "Vẫn không ra", "Học viên hỏi thẳng đáp số lần 2", 2 nhánh "Dạ bài 2" / "À bài 3 ạ").
+- **Phần nào mock:** toàn bộ — không có lời gọi AI thật (không làm bonus này).
+
+**Màn 1 — Xin làm hộ bài đang mở (kịch bản #6):**
+1. **G10 — thu hẹp phạm vi:** tool `goi_y_bai_tap` chỉ gợi ý §3.4, không đưa đáp số — thẻ "Đang mở · không đưa đáp số" ở góc phải trên.
+2. **G11 — giải thích vì sao + nguồn:** khung trích dẫn (viền xanh) chỉ thẳng §3.4 tài liệu buổi 3.
+3. **G8/G9 — gạt bỏ/sửa dễ dàng:** nút "Vẫn không ra" chuyển sang gợi ý bước 2 mà không cần gõ lại câu hỏi.
+4. **Mức tự chủ — cấm, chuyển TA:** khi học viên hỏi thẳng đáp số lần 2, AI không tự trả lời mà chuyển `chuyen_TA` (tự làm, đảo được), hiện nhãn "Đã chuyển TA · chờ phản hồi".
+
+**Màn 2 — Hỏi chéo bài 2/bài 3 (kịch bản #5):**
+1. **G10 — hỏi lại cho rõ:** dù câu hỏi ban đầu là bài 2 (đã hết hạn), AI vẫn hỏi lại "bạn đang hỏi bài 2 hay bài 3?" trước khi khoá chắc.
+2. **Bài đã hết hạn, có đáp án:** trả lời đầy đủ kèm nguồn trang khoá học.
+3. **Bài đang mở — không đổi mức dù "đã trả lời rồi":** nếu học viên xác nhận ý thật là hỏi bài 3, lập tức chuyển sang nhánh "không đưa đáp số", chặn lỗi ngữ cảnh.
+
+- **Quyết định:** hiện độ chắc bằng thẻ "Đang mở · không đưa đáp số" + trích dẫn mục tài liệu trong khung riêng, thay vì chỉ hiện % độ tin cậy (khó hiểu với học viên, không trỏ về đâu cụ thể) hoặc không hiện gì (học viên không biết AI đang né tránh có chủ đích). Nhãn và trích dẫn đặt ngay trong câu trả lời để không cần học viên bấm thêm mới thấy.
 
 ## §6. Tốt là gì (chặng 6)
 
